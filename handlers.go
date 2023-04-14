@@ -8,15 +8,10 @@ import (
 	"rss/lib"
 )
 
-type Subscription struct {
-	Name string
-	Link string
-}
-
 var Decoder = json.NewDecoder
 
 func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
-	var s Subscription
+	var s data.Subscription
 	if err := Decoder(r.Body).Decode(&s); err != nil {
 		fmt.Printf("%s\n", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -24,16 +19,16 @@ func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodPost {
-		if s.Link != "" {
-			data.AddSubscription(s.Link, data.Hackernews)
+		if s.Source != "" {
+			data.AddSubscription(s.Source, data.Hackernews)
 			respond(w, s)
 		}
 	} else {
-		var s []string
+		var subs []string
 		for k := range data.Subscriptions {
-			s = append(s, k)
+			subs = append(subs, k)
 		}
-		respond(w, s)
+		respond(w, subs)
 	}
 }
 
