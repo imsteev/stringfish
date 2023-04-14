@@ -26,14 +26,14 @@ func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if s.Link != "" {
 			data.AddSubscription(s.Link)
-			Respond(w, s)
+			respond(w, s)
 		}
 	} else {
 		var s []string
 		for k := range data.Subscriptions {
 			s = append(s, k)
 		}
-		Respond(w, s)
+		respond(w, s)
 	}
 }
 
@@ -50,7 +50,7 @@ func HandleRSS(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Respond(w http.ResponseWriter, body any) {
+func respond(w http.ResponseWriter, body any) {
 	b, err := json.Marshal(body)
 	if err != nil {
 		w.Write([]byte(err.Error()))

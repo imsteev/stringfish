@@ -11,12 +11,13 @@ type HackerNewsRss struct {
 }
 
 func (h HackerNewsRss) GenerateXml() string {
-	c := clients.HackerNewsClient{}
 
 	sub, ok := data.Subscriptions[h.Username]
 	if !ok || sub.Type != "hackernews" {
 		return ""
 	}
+
+	c := clients.HackerNewsClient{}
 
 	// Get hackernews user
 	u, _ := c.GetUser(sub.Source)
@@ -24,7 +25,7 @@ func (h HackerNewsRss) GenerateXml() string {
 	items := ""
 	for _, submittedID := range u.Submitted {
 		item, _ := c.GetItem(submittedID)
-		items += h.makeRssItem(item).generateXml()
+		items += makeRssItem(item).toXml()
 	}
 
 	userLink := fmt.Sprintf("https://news.ycombinator.com/user?id=%s", u.Id)
@@ -32,7 +33,7 @@ func (h HackerNewsRss) GenerateXml() string {
 		u.Id, u.About, userLink, items)
 }
 
-func (h HackerNewsRss) makeRssItem(i clients.Item) rssItem {
+func makeRssItem(i clients.Item) rssItem {
 	var r rssItem
 	switch i.Type {
 	case "story":
@@ -96,7 +97,7 @@ type rssItem struct {
 	Title       string
 }
 
-func (r rssItem) generateXml() string {
+func (r rssItem) toXml() string {
 	xmlStr := "<item>"
 	if r.Author != "" {
 		xmlStr += makeRssElem("author", r.Author)

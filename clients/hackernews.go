@@ -6,10 +6,6 @@ import (
 	"net/http"
 )
 
-func init() {
-	fmt.Println("hello")
-}
-
 const Link string = "https://hacker-news.firebaseio.com/v0"
 
 type HackerNewsClient struct{}

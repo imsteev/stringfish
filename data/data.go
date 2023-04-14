@@ -12,8 +12,6 @@ func init() {
 	AddSubscription("dfern")
 }
 
-type Data struct{}
-
 func AddSubscription(source string) {
 	Subscriptions[source] = Subscription{Source: source, Type: "hackernews"}
 }
