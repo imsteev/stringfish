@@ -25,7 +25,7 @@ func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
 		if s.Link != "" {
-			data.AddSubscription(s.Link)
+			data.AddSubscription(s.Link, data.Hackernews)
 			respond(w, s)
 		}
 	} else {
@@ -45,7 +45,7 @@ func HandleRSS(w http.ResponseWriter, r *http.Request) {
 			hnRss := lib.HackerNewsRss{
 				Username: s.Source,
 			}
-			fmt.Println(hnRss.GenerateXml())
+			w.Write([]byte(hnRss.GenerateXml()))
 		}
 	}
 }

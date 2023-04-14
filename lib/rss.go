@@ -1,9 +1,9 @@
 package lib
 
 import (
+	"encoding/xml"
 	"fmt"
 	"rss/clients"
-	"rss/data"
 )
 
 type HackerNewsRss struct {
@@ -11,26 +11,22 @@ type HackerNewsRss struct {
 }
 
 func (h HackerNewsRss) GenerateXml() string {
-
-	sub, ok := data.Subscriptions[h.Username]
-	if !ok || sub.Type != "hackernews" {
-		return ""
-	}
-
 	c := clients.HackerNewsClient{}
+	u, _ := c.GetUser(h.Username)
 
-	// Get hackernews user
-	u, _ := c.GetUser(sub.Source)
-
-	items := ""
+	itemsXml := ""
 	for _, submittedID := range u.Submitted {
 		item, _ := c.GetItem(submittedID)
-		items += makeRssItem(item).toXml()
+		itemXml, _ := xml.Marshal(makeRssItem(item))
+		itemsXml += string(itemXml)
 	}
 
-	userLink := fmt.Sprintf("https://news.ycombinator.com/user?id=%s", u.Id)
-	return fmt.Sprintf(`<rss version="2.0"><channel><title>%s</title><description>%s</description><link>%s</link>%s</channel>`,
-		u.Id, u.About, userLink, items)
+	return fmt.Sprintf(`<rss version="2.0"><channel><title>%s</title><description>%s</description><link>%s</link>%s</channel></rss>`,
+		u.Id, u.About, hnUserLink(u.Id), itemsXml)
+}
+
+func hnUserLink(id string) string {
+	return fmt.Sprintf("https://news.ycombinator.com/user?id=%s", id)
 }
 
 func makeRssItem(i clients.Item) rssItem {
@@ -85,54 +81,14 @@ func makeRssItem(i clients.Item) rssItem {
 }
 
 type rssItem struct {
-	Author      string
-	Category    string
-	Comments    string
-	Description string
-	Enclosure   string
-	Guid        string
-	Link        string
-	PubDate     string
-	Source      string
-	Title       string
-}
-
-func (r rssItem) toXml() string {
-	xmlStr := "<item>"
-	if r.Author != "" {
-		xmlStr += makeRssElem("author", r.Author)
-	}
-	if r.Category != "" {
-		xmlStr += makeRssElem("cateogry", r.Category)
-	}
-	if r.Comments != "" {
-		xmlStr += makeRssElem("comments", r.Comments)
-	}
-	if r.Description != "" {
-		xmlStr += makeRssElem("description", r.Description)
-	}
-	if r.Enclosure != "" {
-		xmlStr += makeRssElem("enclosure", r.Enclosure)
-	}
-	if r.Guid != "" {
-		xmlStr += makeRssElem("guid", r.Guid)
-	}
-	if r.Link != "" {
-		xmlStr += makeRssElem("link", r.Link)
-	}
-	if r.PubDate != "" {
-		xmlStr += makeRssElem("pubDate", r.PubDate)
-	}
-	if r.Source != "" {
-		xmlStr += makeRssElem("source", r.Source)
-	}
-	if r.Title != "" {
-		xmlStr += makeRssElem("title", r.Title)
-	}
-	xmlStr += "</item>"
-	return xmlStr
-}
-
-func makeRssElem(tag string, val string) string {
-	return fmt.Sprintf(`<%s>%s</%s>`, tag, val, tag)
+	Author      string `xml:"author"`
+	Category    string `xml:"category"`
+	Comments    string `xml:"comments"`
+	Description string `xml:"description"`
+	Enclosure   string `xml:"enclosure"`
+	Guid        string `xml:"guid"`
+	Link        string `xml:"link"`
+	PubDate     string `xml:"pubDate"`
+	Source      string `xml:"source"`
+	Title       string `xml:"title"`
 }
