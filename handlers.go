@@ -22,14 +22,17 @@ func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 	g := data.Gateway{}
 
 	if r.Method == http.MethodPost {
-		if s.Source != "" {
-			g.AddSubscription(s.Source, data.Hackernews)
-			s.Type = data.Hackernews
-			respondJson(w, s)
+		if s.Source != string(data.Hackernews) {
+			reject(w, http.StatusBadRequest, fmt.Errorf("%s source type not supported", s.Type))
+			return
 		}
-	} else {
-		respondJson(w, g.GetAllSubscriptions())
+		g.AddSubscription(s.Source, data.Hackernews)
+		s.Type = data.Hackernews
+		respondJson(w, s)
+		return
 	}
+
+	respondJson(w, g.GetAllSubscriptions())
 }
 
 // TODO: parametrized route
