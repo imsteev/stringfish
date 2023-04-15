@@ -12,9 +12,9 @@ type Subscription struct {
 	Type   SourceType
 }
 
-var Subscriptions map[string]Subscription
+var subscriptions map[string]Subscription
 
 // TODO: persistence
 func init() {
-	Subscriptions = make(map[string]Subscription)
+	subscriptions = make(map[string]Subscription)
 }
