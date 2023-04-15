@@ -3,6 +3,7 @@ package feed
 import (
 	"fmt"
 	"math"
+	"sort"
 	hackernews "stringfish/clients"
 	"stringfish/lib/rss"
 	"time"
@@ -42,11 +43,9 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 			items := make([]hackernews.Item, len(ids))
 
 			for _, submittedID := range ids {
-				item, _ := h.Client.GetItem(submittedID)
-				// if err != nil {
-				// 	return nil, err
-				// }
-				if item.Deleted {
+				item, err := h.Client.GetItem(submittedID)
+				// TODO: how to handle failure?
+				if err != nil || item.Deleted || item.Id == 0 {
 					continue
 				}
 				items = append(items, item)
@@ -55,14 +54,17 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 		}(i)
 	}
 
+	var items []hackernews.Item
 	for range itemChunks {
-		items := <-results
-		for _, item := range items {
-			if item.Id == 0 {
-				continue
-			}
-			r.Channel.Items = append(r.Channel.Items, makeRssItem(item))
-		}
+		items = append(items, <-results...)
+	}
+
+	sort.Slice(items, func(i int, j int) bool {
+		return items[j].Time < items[i].Time
+	})
+
+	for _, item := range items {
+		r.Channel.Items = append(r.Channel.Items, makeRssItem(item))
 	}
 
 	return &r, nil
