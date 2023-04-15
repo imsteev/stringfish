@@ -20,7 +20,7 @@ func (h HackerNewsFeed) GenerateXml() string {
 		Channel: rss.Channel{
 			Title:       u.Id,
 			Description: u.About,
-			Link:        hnUserLink(u.Id),
+			Link:        fmt.Sprintf("https://news.ycombinator.com/user?id=%s", u.Id),
 		},
 	}
 
@@ -32,10 +32,6 @@ func (h HackerNewsFeed) GenerateXml() string {
 	bytes, _ := xml.Marshal(r)
 
 	return xml.Header + string(bytes)
-}
-
-func hnUserLink(id string) string {
-	return fmt.Sprintf("https://news.ycombinator.com/user?id=%s", id)
 }
 
 func makeRssItem(i hackernews.Item) rss.Item {
