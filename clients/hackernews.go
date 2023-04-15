@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const Link string = "https://hacker-news.firebaseio.com/v0"
+const baseUrl string = "https://hacker-news.firebaseio.com/v0"
 
 type HackerNewsClient struct {
 	Timeout time.Duration
@@ -41,7 +41,7 @@ type Item struct {
 
 func (h *HackerNewsClient) GetUser(username string) (User, error) {
 	client := http.Client{Timeout: h.Timeout}
-	r, err := client.Get(Link + fmt.Sprintf("/user/%s.json?print=pretty", username))
+	r, err := client.Get(fmt.Sprintf("%s/user/%s.json?print=pretty", baseUrl, username))
 	if err != nil {
 		return User{}, err
 	}
@@ -52,7 +52,7 @@ func (h *HackerNewsClient) GetUser(username string) (User, error) {
 
 func (h *HackerNewsClient) GetItem(id int) (Item, error) {
 	client := http.Client{}
-	r, err := client.Get(Link + fmt.Sprintf("/item/%d.json?print=pretty", id))
+	r, err := client.Get(fmt.Sprintf("%s/item/%d.json?print=pretty", baseUrl, id))
 	if err != nil {
 		return Item{}, err
 	}

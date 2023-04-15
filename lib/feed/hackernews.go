@@ -2,8 +2,8 @@ package feed
 
 import (
 	"fmt"
-	hackernews "rss/clients"
-	"rss/lib/rss"
+	hackernews "stringfish/clients"
+	"stringfish/lib/rss"
 	"time"
 )
 
@@ -12,7 +12,7 @@ type HackerNewsFeed struct {
 }
 
 func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
-	c := hackernews.HackerNewsClient{
+	c := hackernews.Client{
 		Timeout: 120 * time.Second,
 	}
 	user, err := c.GetUser(h.Username)

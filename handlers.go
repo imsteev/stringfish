@@ -5,8 +5,8 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
-	"rss/data"
-	"rss/lib/feed"
+	"stringfish/data"
+	"stringfish/lib/feed"
 )
 
 // TODO: parametrized route for GET + POST
