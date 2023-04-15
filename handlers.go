@@ -22,13 +22,12 @@ func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 	g := data.Gateway{}
 
 	if r.Method == http.MethodPost {
-		if s.Source != string(data.Hackernews) {
-			reject(w, http.StatusBadRequest, fmt.Errorf("%s source type not supported", s.Type))
+		if s.Type == data.Hackernews {
+			g.AddSubscription(s.Source, s.Type)
+			respondJson(w, s)
 			return
 		}
-		g.AddSubscription(s.Source, data.Hackernews)
-		s.Type = data.Hackernews
-		respondJson(w, s)
+		reject(w, http.StatusBadRequest, fmt.Errorf("%s source type not supported", s.Type))
 		return
 	}
 
