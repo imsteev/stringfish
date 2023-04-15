@@ -36,8 +36,11 @@ func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 
 // TODO: parametrized route
 func HandleRSS(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Query()
-	source, sourceType := params.Get("source"), params.Get("type")
+	var (
+		params     = r.URL.Query()
+		source     = params.Get("source")
+		sourceType = params.Get("type")
+	)
 
 	if sourceType != string(data.Hackernews) {
 		reject(w, http.StatusBadRequest, fmt.Errorf("unsupported source type: %s", sourceType))
