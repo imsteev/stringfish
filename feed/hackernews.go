@@ -4,18 +4,15 @@ import (
 	"fmt"
 	hackernews "stringfish/clients"
 	"stringfish/lib/rss"
-	"time"
 )
 
 type HackerNewsFeed struct {
 	Username string
+	Client   hackernews.HackerNewsClient
 }
 
 func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
-	c := hackernews.Client{
-		Timeout: 120 * time.Second,
-	}
-	user, err := c.GetUser(h.Username)
+	user, err := h.Client.GetUser(h.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -32,9 +29,9 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 	}
 
 	for _, submittedID := range user.Submitted {
-		item, _ := c.GetItem(submittedID)
-		if item.Type == "pollopt" {
-			continue
+		item, err := h.Client.GetItem(submittedID)
+		if err != nil {
+			return nil, err
 		}
 		r.Channel.Items = append(r.Channel.Items, makeRssItem(item))
 	}

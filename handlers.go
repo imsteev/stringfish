@@ -5,8 +5,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	hackernews "stringfish/clients"
 	"stringfish/data"
-	"stringfish/lib/feed"
+	"stringfish/feed"
+	"time"
 )
 
 // TODO: parametrized route for GET + POST
@@ -35,12 +37,17 @@ func HandleRSS(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	source, sourceType := params.Get("source"), params.Get("type")
 
-	if sourceType != "hackernews" {
+	if sourceType != string(data.Hackernews) {
 		reject(w, http.StatusBadRequest, fmt.Errorf("unsupported source type: %s", sourceType))
 		return
 	}
 
-	feed := feed.HackerNewsFeed{Username: source}
+	feed := feed.HackerNewsFeed{
+		Username: source,
+		Client: hackernews.HackerNewsClient{
+			Timeout: 120 * time.Second,
+		},
+	}
 
 	rss, err := feed.GenerateRss()
 	if err != nil {
