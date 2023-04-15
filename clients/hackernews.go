@@ -1,4 +1,4 @@
-package clients
+package hackernews
 
 import (
 	"encoding/json"
@@ -18,17 +18,6 @@ type User struct {
 	Submitted []int
 }
 
-func (h *HackerNewsClient) GetUser(username string) (User, error) {
-	client := http.Client{}
-	r, err := client.Get(Link + fmt.Sprintf("/user/%s.json?print=pretty", username))
-	if err != nil {
-		return User{}, err
-	}
-	var u User
-	json.NewDecoder(r.Body).Decode(&u)
-	return u, nil
-}
-
 type Item struct {
 	Id          string
 	Deleted     bool
@@ -45,6 +34,17 @@ type Item struct {
 	Title       string
 	Parts       []any
 	Descendants int
+}
+
+func (h *HackerNewsClient) GetUser(username string) (User, error) {
+	client := http.Client{}
+	r, err := client.Get(Link + fmt.Sprintf("/user/%s.json?print=pretty", username))
+	if err != nil {
+		return User{}, err
+	}
+	var u User
+	json.NewDecoder(r.Body).Decode(&u)
+	return u, nil
 }
 
 func (h *HackerNewsClient) GetItem(id int) (Item, error) {

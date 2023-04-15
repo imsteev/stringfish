@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"rss/data"
-	"rss/lib"
+	"rss/lib/feed"
 )
 
-var Decoder = json.NewDecoder
-
+// TODO: parametrized route for GET + POST
 func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 	var s data.Subscription
-	if err := Decoder(r.Body).Decode(&s); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
 		fmt.Printf("%s\n", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -21,6 +20,7 @@ func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if s.Source != "" {
 			data.AddSubscription(s.Source, data.Hackernews)
+			s.Type = data.Hackernews
 			respond(w, s)
 		}
 	} else {
@@ -32,15 +32,14 @@ func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TODO: parametrized route
+// TODO: content-type
 func HandleRSS(w http.ResponseWriter, r *http.Request) {
-
 	for _, s := range data.Subscriptions {
 		switch s.Type {
 		case "hackernews":
-			hnRss := lib.HackerNewsRss{
-				Username: s.Source,
-			}
-			w.Write([]byte(hnRss.GenerateXml()))
+			feed := feed.HackerNewsFeed{Username: s.Source}
+			w.Write([]byte(feed.GenerateXml()))
 		}
 	}
 }
