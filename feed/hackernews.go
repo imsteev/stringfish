@@ -2,6 +2,7 @@ package feed
 
 import (
 	"fmt"
+	"math"
 	hackernews "stringfish/clients"
 	"stringfish/lib/rss"
 )
@@ -28,15 +29,53 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 		},
 	}
 
-	for _, submittedID := range user.Submitted {
-		item, err := h.Client.GetItem(submittedID)
-		if err != nil {
-			return nil, err
+	itemChunks := chunks(user.Submitted, 50)
+
+	workers := make(chan []int, len(itemChunks))
+	results := make(chan []hackernews.Item, len(itemChunks))
+
+	for i, chunk := range itemChunks {
+		workers <- chunk
+		go func(i int) {
+			ids := <-workers
+			items := make([]hackernews.Item, len(ids))
+
+			for _, submittedID := range ids {
+				item, _ := h.Client.GetItem(submittedID)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				if item.Deleted {
+					continue
+				}
+				items = append(items, item)
+			}
+			results <- items
+		}(i)
+	}
+
+	for range itemChunks {
+		items := <-results
+		for _, item := range items {
+			r.Channel.Items = append(r.Channel.Items, makeRssItem(item))
 		}
-		r.Channel.Items = append(r.Channel.Items, makeRssItem(item))
 	}
 
 	return &r, nil
+}
+
+func chunks(arr []int, chunkSize int) [][]int {
+	numChunks := int(math.Ceil(float64(len(arr)) / (float64(chunkSize))))
+
+	chunks := make([][]int, numChunks)
+	i := 0
+	for i < len(arr) {
+		chunkIdx := i / chunkSize
+		chunks[chunkIdx] = append(chunks[chunkIdx], arr[i])
+		i++
+	}
+
+	return chunks
 }
 
 func makeRssItem(i hackernews.Item) rss.Item {
