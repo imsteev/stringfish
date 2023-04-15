@@ -5,6 +5,7 @@ import (
 	"math"
 	hackernews "stringfish/clients"
 	"stringfish/lib/rss"
+	"time"
 )
 
 type HackerNewsFeed struct {
@@ -57,6 +58,9 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 	for range itemChunks {
 		items := <-results
 		for _, item := range items {
+			if item.Id == 0 {
+				continue
+			}
 			r.Channel.Items = append(r.Channel.Items, makeRssItem(item))
 		}
 	}
@@ -80,26 +84,25 @@ func chunks(arr []int, chunkSize int) [][]int {
 
 func makeRssItem(i hackernews.Item) rss.Item {
 	var r rss.Item
+	fmt.Println(i)
+
 	switch i.Type {
 	case "story":
 		r = rss.Item{
-			Title:   i.Title,
-			Author:  i.By,
-			Link:    i.Url,
-			PubDate: i.Time,
+			Title:  i.Title,
+			Author: i.By,
+			Link:   i.Url,
 		}
 	case "comment":
 		r = rss.Item{
 			Description: i.Text,
 			Author:      i.By,
-			PubDate:     i.Time,
 		}
 	case "ask":
 		r = rss.Item{
 			Title:       i.Title,
 			Description: i.Text,
 			Author:      i.By,
-			PubDate:     i.Time,
 		}
 	case "job":
 		r = rss.Item{
@@ -107,24 +110,24 @@ func makeRssItem(i hackernews.Item) rss.Item {
 			Description: i.Text,
 			Author:      i.By,
 			Link:        i.Url,
-			PubDate:     i.Time,
 		}
 	case "poll":
 		r = rss.Item{
 			Title:       i.Title,
 			Description: i.Text,
 			Link:        i.Url,
-			PubDate:     i.Time,
 		}
 	case "pollopt":
 		r = rss.Item{
 			Description: i.Text,
 			Author:      i.By,
-			PubDate:     i.Time,
 		}
 	default:
 		return rss.Item{}
 	}
+
+	r.PubDate = time.Unix(int64(i.Time), 0).String()
+	r.Guid = fmt.Sprintf("%s-%d", i.Type, i.Id)
 	return r
 
 }

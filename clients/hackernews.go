@@ -44,11 +44,11 @@ type User struct {
 }
 
 type Item struct {
-	Id          string
+	Id          int
 	Deleted     bool
 	Type        string
 	By          string
-	Time        string
+	Time        int
 	Text        string
 	Dead        bool
 	Parent      string
