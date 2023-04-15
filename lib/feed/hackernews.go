@@ -1,37 +1,45 @@
 package feed
 
 import (
-	"encoding/xml"
 	"fmt"
 	hackernews "rss/clients"
 	"rss/lib/rss"
+	"time"
 )
 
 type HackerNewsFeed struct {
 	Username string
 }
 
-func (h HackerNewsFeed) GenerateXml() string {
-	c := hackernews.HackerNewsClient{}
-	u, _ := c.GetUser(h.Username)
+func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
+	c := hackernews.HackerNewsClient{
+		Timeout: 120 * time.Second,
+	}
+	user, err := c.GetUser(h.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	profileLink := fmt.Sprintf("https://news.ycombinator.com/user?id=%s", user.Id)
 
 	r := rss.Rss{
 		Version: "2.0",
 		Channel: rss.Channel{
-			Title:       u.Id,
-			Description: u.About,
-			Link:        fmt.Sprintf("https://news.ycombinator.com/user?id=%s", u.Id),
+			Title:       user.Id,
+			Description: user.About,
+			Link:        profileLink,
 		},
 	}
 
-	for _, submittedID := range u.Submitted {
+	for _, submittedID := range user.Submitted {
 		item, _ := c.GetItem(submittedID)
+		if item.Type == "pollopt" {
+			continue
+		}
 		r.Channel.Items = append(r.Channel.Items, makeRssItem(item))
 	}
 
-	bytes, _ := xml.Marshal(r)
-
-	return xml.Header + string(bytes)
+	return &r, nil
 }
 
 func makeRssItem(i hackernews.Item) rss.Item {

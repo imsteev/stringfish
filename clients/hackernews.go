@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 const Link string = "https://hacker-news.firebaseio.com/v0"
 
-type HackerNewsClient struct{}
+type HackerNewsClient struct {
+	Timeout time.Duration
+}
 
 type User struct {
 	Id        string
@@ -37,7 +40,7 @@ type Item struct {
 }
 
 func (h *HackerNewsClient) GetUser(username string) (User, error) {
-	client := http.Client{}
+	client := http.Client{Timeout: h.Timeout}
 	r, err := client.Get(Link + fmt.Sprintf("/user/%s.json?print=pretty", username))
 	if err != nil {
 		return User{}, err

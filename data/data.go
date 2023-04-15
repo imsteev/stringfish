@@ -18,11 +18,3 @@ var Subscriptions map[string]Subscription
 func init() {
 	Subscriptions = make(map[string]Subscription)
 }
-
-func AddSubscription(source string, sourceType SourceType) {
-	Subscriptions[source] = Subscription{Source: source, Type: sourceType}
-}
-
-func GetSubscriptions(source string) Subscription {
-	return Subscriptions[source]
-}

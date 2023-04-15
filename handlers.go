@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"net/http"
 	"rss/data"
@@ -12,42 +13,61 @@ import (
 func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 	var s data.Subscription
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
-		fmt.Printf("%s\n", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		reject(w, http.StatusInternalServerError, err)
 		return
 	}
 
+	g := data.Gateway{}
+
 	if r.Method == http.MethodPost {
 		if s.Source != "" {
-			data.AddSubscription(s.Source, data.Hackernews)
+			g.AddSubscription(s.Source, data.Hackernews)
 			s.Type = data.Hackernews
-			respond(w, s)
+			respondJson(w, s)
 		}
 	} else {
-		var subs []string
-		for k := range data.Subscriptions {
-			subs = append(subs, k)
-		}
-		respond(w, subs)
+		respondJson(w, g.GetAllSubscriptions())
 	}
 }
 
 // TODO: parametrized route
-// TODO: content-type
 func HandleRSS(w http.ResponseWriter, r *http.Request) {
-	for _, s := range data.Subscriptions {
-		switch s.Type {
-		case "hackernews":
-			feed := feed.HackerNewsFeed{Username: s.Source}
-			w.Write([]byte(feed.GenerateXml()))
-		}
+	params := r.URL.Query()
+	source, sourceType := params.Get("source"), params.Get("type")
+
+	if sourceType != "hackernews" {
+		reject(w, http.StatusBadRequest, fmt.Errorf("unsupported source type: %s", sourceType))
+		return
 	}
+
+	feed := feed.HackerNewsFeed{Username: source}
+
+	rss, err := feed.GenerateRss()
+	if err != nil {
+		reject(w, http.StatusInternalServerError, fmt.Errorf("could not generate RSS feed"))
+		return
+	}
+
+	rssXml, err := xml.Marshal(rss)
+	if err != nil {
+		reject(w, http.StatusInternalServerError, fmt.Errorf("problem marshalling RSS feed"))
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/rss+xml")
+	w.Write([]byte(xml.Header + string(rssXml)))
 }
 
-func respond(w http.ResponseWriter, body any) {
+func respondJson(w http.ResponseWriter, body any) {
+	w.Header().Add("Content-Type", "application/json")
 	b, err := json.Marshal(body)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	}
 	w.Write(b)
+}
+
+func reject(w http.ResponseWriter, statusCode int, err error) {
+	w.WriteHeader(statusCode)
+	w.Write([]byte(err.Error()))
 }

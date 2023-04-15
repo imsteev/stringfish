@@ -14,7 +14,7 @@ type Channel struct {
 	Title       string `xml:"title"`
 	Description string `xml:"description"`
 	Link        string `xml:"link"`
-	Items       []Item `xml:"item"`
+	Items       []Item `xml:"item,omitempty"`
 }
 
 type Item struct {
