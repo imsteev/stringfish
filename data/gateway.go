@@ -14,7 +14,3 @@ func (g Gateway) GetAllSubscriptions() []Subscription {
 func (g Gateway) AddSubscription(source string, sourceType SourceType) {
 	Subscriptions[source] = Subscription{Source: source, Type: sourceType}
 }
-
-func (g Gateway) GetSubscriptions(source string) Subscription {
-	return Subscriptions[source]
-}
