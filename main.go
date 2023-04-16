@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-const SERVER_ADDR = "localhost:8080"
+const SERVER_ADDR = ":8080"
 
 func main() {
 
