@@ -15,7 +15,7 @@ import (
 func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 	var s data.Subscription
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
-		reject(w, http.StatusInternalServerError, err)
+		reject(w, http.StatusInternalServerError, fmt.Errorf("problem decoding: %s", err))
 		return
 	}
 
