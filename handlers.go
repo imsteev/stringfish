@@ -13,15 +13,15 @@ import (
 
 // TODO: parametrized route for GET + POST
 func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
-	var s data.Subscription
-	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
-		reject(w, http.StatusInternalServerError, fmt.Errorf("problem decoding: %s", err))
-		return
-	}
 
 	g := data.Gateway{}
 
 	if r.Method == http.MethodPost {
+		var s data.Subscription
+		if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
+			reject(w, http.StatusInternalServerError, fmt.Errorf("problem decoding: %s", err))
+			return
+		}
 		if s.Type == data.Hackernews {
 			g.AddSubscription(s.Source, s.Type)
 			respondJson(w, s)
