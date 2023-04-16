@@ -86,7 +86,6 @@ func chunks(arr []int, chunkSize int) [][]int {
 
 func makeRssItem(i hackernews.Item) rss.Item {
 	var r rss.Item
-	fmt.Println(i)
 
 	switch i.Type {
 	case "story":
