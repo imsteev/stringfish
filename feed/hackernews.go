@@ -26,9 +26,9 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 		workers = make(chan []int, len(chunks))
 		results = make(chan []hackernews.Item, len(chunks))
 	)
-	for i, chunk := range chunks {
+	for _, chunk := range chunks {
 		workers <- chunk
-		go func(i int) {
+		go func() {
 			ids := <-workers
 			items := make([]hackernews.Item, len(ids))
 
@@ -41,7 +41,7 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 				items = append(items, item)
 			}
 			results <- items
-		}(i)
+		}()
 	}
 
 	// Gather all the results.
