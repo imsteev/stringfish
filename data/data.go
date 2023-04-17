@@ -8,8 +8,12 @@ const (
 )
 
 type Subscription struct {
+	// Type represents where an RSS feed comes from.
+	Type SourceType
+
+	// Source is contextualized by Type. For example, if Type is "hackernews",
+	// it should be a HackerNews username.
 	Source string
-	Type   SourceType
 }
 
 var subscriptions map[string]Subscription
