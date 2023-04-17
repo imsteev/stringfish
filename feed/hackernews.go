@@ -31,9 +31,8 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 		go func() {
 			ids := <-workers
 			items := make([]hackernews.Item, len(ids))
-
-			for _, submittedID := range ids {
-				item, err := h.Client.GetItem(submittedID)
+			for _, id := range ids {
+				item, err := h.Client.GetItem(id)
 				// TODO: how to handle failure?
 				if err != nil || item.Deleted || item.Id == 0 {
 					continue
