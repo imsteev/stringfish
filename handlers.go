@@ -13,7 +13,6 @@ import (
 
 // TODO: parametrized route for GET + POST
 func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Access-Control-Allow-Origin", "*")
 	g := data.Gateway{}
 
 	if r.Method == http.MethodPost {
