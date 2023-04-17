@@ -72,7 +72,6 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 
 func partition(arr []int, chunkSize int) [][]int {
 	numChunks := int(math.Ceil(float64(len(arr)) / (float64(chunkSize))))
-
 	chunks := make([][]int, numChunks)
 	i := 0
 	for i < len(arr) {
@@ -80,13 +79,11 @@ func partition(arr []int, chunkSize int) [][]int {
 		chunks[chunkIdx] = append(chunks[chunkIdx], arr[i])
 		i++
 	}
-
 	return chunks
 }
 
 func makeRssItem(i hackernews.Item) rss.Item {
 	var r rss.Item
-
 	switch i.Type {
 	case "story":
 		r = rss.Item{
@@ -123,12 +120,8 @@ func makeRssItem(i hackernews.Item) rss.Item {
 			Description: i.Text,
 			Author:      i.By,
 		}
-	default:
-		return rss.Item{}
 	}
-
 	r.PubDate = time.Unix(int64(i.Time), 0).String()
 	r.Guid = fmt.Sprintf("%s-%d", i.Type, i.Id)
 	return r
-
 }
