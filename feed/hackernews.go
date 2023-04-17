@@ -20,23 +20,13 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 		return nil, err
 	}
 
-	profileLink := fmt.Sprintf("https://news.ycombinator.com/user?id=%s", user.Id)
-
-	r := rss.Rss{
-		Version: "2.0",
-		Channel: rss.Channel{
-			Title:       user.Id,
-			Description: user.About,
-			Link:        profileLink,
-		},
-	}
-
-	itemChunks := chunks(user.Submitted, 50)
-
-	workers := make(chan []int, len(itemChunks))
-	results := make(chan []hackernews.Item, len(itemChunks))
-
-	for i, chunk := range itemChunks {
+	// Concurrently fetch HackerNews items in chunks.
+	var (
+		chunks  = partition(user.Submitted, 50)
+		workers = make(chan []int, len(chunks))
+		results = make(chan []hackernews.Item, len(chunks))
+	)
+	for i, chunk := range chunks {
 		workers <- chunk
 		go func(i int) {
 			ids := <-workers
@@ -54,15 +44,25 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 		}(i)
 	}
 
+	// Gather all the results.
 	var items []hackernews.Item
-	for range itemChunks {
+	for range chunks {
 		items = append(items, <-results...)
 	}
-
 	sort.Slice(items, func(i int, j int) bool {
 		return items[j].Time < items[i].Time
 	})
 
+	// Build the RSS!
+	link := fmt.Sprintf("https://news.ycombinator.com/user?id=%s", user.Id)
+	r := rss.Rss{
+		Version: "2.0",
+		Channel: rss.Channel{
+			Title:       user.Id,
+			Description: user.About,
+			Link:        link,
+		},
+	}
 	for _, item := range items {
 		r.Channel.Items = append(r.Channel.Items, makeRssItem(item))
 	}
@@ -70,7 +70,7 @@ func (h HackerNewsFeed) GenerateRss() (*rss.Rss, error) {
 	return &r, nil
 }
 
-func chunks(arr []int, chunkSize int) [][]int {
+func partition(arr []int, chunkSize int) [][]int {
 	numChunks := int(math.Ceil(float64(len(arr)) / (float64(chunkSize))))
 
 	chunks := make([][]int, numChunks)
