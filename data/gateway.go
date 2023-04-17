@@ -1,6 +1,5 @@
 package data
 
-// TODO: configure persistence
 type Gateway struct{}
 
 func (g Gateway) GetAllSubscriptions() []Subscription {
