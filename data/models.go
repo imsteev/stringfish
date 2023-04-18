@@ -5,6 +5,7 @@ type SourceType string
 // Supported source types
 const (
 	Hackernews SourceType = "hackernews"
+	XmlLink    SourceType = "xml_link"
 )
 
 type Subscription struct {

@@ -21,12 +21,8 @@ func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 			reject(w, http.StatusInternalServerError, fmt.Errorf("problem decoding: %s", err))
 			return
 		}
-		if s.Type == data.Hackernews {
-			g.AddSubscription(s.Source, s.Type)
-			respondJson(w, s)
-			return
-		}
-		reject(w, http.StatusBadRequest, fmt.Errorf("%s source type not supported", s.Type))
+		g.AddSubscription(s.Source, s.Type)
+		respondJson(w, s)
 		return
 	}
 
@@ -41,32 +37,33 @@ func HandleRSS(w http.ResponseWriter, r *http.Request) {
 		sourceType = params.Get("type")
 	)
 
-	if sourceType != string(data.Hackernews) {
+	switch sourceType {
+	case string(data.Hackernews):
+		feed := feed.HackerNewsFeed{
+			Username: source,
+			Client: hackernews.HackerNewsClient{
+				Timeout: 120 * time.Second,
+			},
+		}
+		rss, err := feed.GenerateRss()
+		if err != nil {
+			reject(w, http.StatusInternalServerError, fmt.Errorf("could not generate RSS feed"))
+			return
+		}
+
+		rssXml, err := xml.Marshal(rss)
+		if err != nil {
+			reject(w, http.StatusInternalServerError, fmt.Errorf("problem marshalling RSS feed"))
+			return
+		}
+		w.Header().Add("Content-Type", "application/rss+xml")
+		w.Write([]byte(xml.Header + string(rssXml)))
+	case string(data.XmlLink):
+		http.Redirect(w, r, source, http.StatusSeeOther)
+	default:
 		reject(w, http.StatusBadRequest, fmt.Errorf("unsupported source type: %s", sourceType))
 		return
 	}
-
-	feed := feed.HackerNewsFeed{
-		Username: source,
-		Client: hackernews.HackerNewsClient{
-			Timeout: 120 * time.Second,
-		},
-	}
-
-	rss, err := feed.GenerateRss()
-	if err != nil {
-		reject(w, http.StatusInternalServerError, fmt.Errorf("could not generate RSS feed"))
-		return
-	}
-
-	rssXml, err := xml.Marshal(rss)
-	if err != nil {
-		reject(w, http.StatusInternalServerError, fmt.Errorf("problem marshalling RSS feed"))
-		return
-	}
-
-	w.Header().Add("Content-Type", "application/rss+xml")
-	w.Write([]byte(xml.Header + string(rssXml)))
 }
 
 func respondJson(w http.ResponseWriter, body any) {
