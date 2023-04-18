@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"os"
 	hackernews "stringfish/clients"
 	"stringfish/data"
 	"stringfish/feed"
@@ -26,7 +27,24 @@ func HandleSubscriptions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJson(w, g.GetAllSubscriptions())
+	type subscription struct {
+		data.Subscription
+		GetRssLink string
+	}
+
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "http://localhost:8080"
+	}
+
+	protocol := []subscription{}
+	for _, sub := range g.GetAllSubscriptions() {
+		protocol = append(protocol, subscription{
+			Subscription: sub,
+			GetRssLink:   fmt.Sprintf("%s/rss?source=%s&type=%s", host, sub.Source, sub.Type),
+		})
+	}
+	respondJson(w, protocol)
 }
 
 // TODO: parametrized route
